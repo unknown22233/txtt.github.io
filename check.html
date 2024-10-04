@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vérification de Tokens</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+            margin-bottom: 10px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #results {
+            margin-top: 20px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Vérification de Token</h1>
+    <textarea id="tokenInput" placeholder="Collez vos tokens ici, un par ligne..."></textarea>
+    <button onclick="checkTokens()">Vérifier les Tokens</button>
+    <div id="results"></div>
+
+    <script>
+        async function checkTokens() {
+            const tokens = document.getElementById("tokenInput").value.split('\n');
+            const resultsDiv = document.getElementById("results");
+            resultsDiv.innerHTML = "";
+
+            for (const token of tokens) {
+                await checkToken(token.trim(), resultsDiv);
+            }
+        }
+
+        async function checkToken(token, resultsDiv) {
+            try {
+                const response = await fetch("https://discord.com/api/v9/users/@me/library", {
+                    method: "GET",
+                    headers: {
+                        "Authorization": token,
+                    }
+                });
+
+                let resultText;
+                if (response.status === 401) {
+                    resultText = "Mauvais token: " + token;
+                } else if (response.status === 200) {
+                    resultText = "Bon token: " + token;
+                    await saveGoodToken(token);
+                } else if (response.status === 403) {
+                    resultText = "Token verrouillé: " + token;
+                } else {
+                    resultText = "Erreur inconnue avec le token: " + token;
+                }
+
+                resultsDiv.innerHTML += "<p>" + resultText + "</p>";
+            } catch (error) {
+                resultsDiv.innerHTML += "<p>Erreur lors de la vérification du token: " + token + "</p>";
+            }
+        }
+
+        async function saveGoodToken(token) {
+            console.log("Sauvegarde du bon token:", token);
+        }
+    </script>
+</body>
+</html>
